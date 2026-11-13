@@ -1,0 +1,1928 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MediaPipe Streaming TTS Studio</title>
+  <style>
+    /* ==========================================================================
+       shadcn/ui Design Tokens (Zinc)
+       ========================================================================== */
+    :root {
+      --background: 0 0% 100%;
+      --foreground: 240 10% 3.9%;
+      --card: 0 0% 100%;
+      --card-foreground: 240 10% 3.9%;
+      --popover: 0 0% 100%;
+      --popover-foreground: 240 10% 3.9%;
+      --primary: 240 5.9% 10%;
+      --primary-foreground: 0 0% 98%;
+      --secondary: 240 4.8% 95.9%;
+      --secondary-foreground: 240 5.9% 10%;
+      --muted: 240 4.8% 95.9%;
+      --muted-foreground: 240 3.8% 46.1%;
+      --accent: 240 4.8% 95.9%;
+      --accent-foreground: 240 5.9% 10%;
+      --destructive: 0 84.2% 60.2%;
+      --destructive-foreground: 0 0% 98%;
+      --border: 240 5.9% 90%;
+      --input: 240 5.9% 90%;
+      --ring: 240 5.9% 10%;
+      --radius: 0.6rem;
+      --success: 142.1 76.2% 36.3%;
+      --warning: 38 92% 50%;
+    }
+
+    html.dark {
+      --background: 240 10% 3.9%;
+      --foreground: 0 0% 98%;
+      --card: 240 10% 5.5%;
+      --card-foreground: 0 0% 98%;
+      --popover: 240 10% 5.5%;
+      --popover-foreground: 0 0% 98%;
+      --primary: 0 0% 98%;
+      --primary-foreground: 240 5.9% 10%;
+      --secondary: 240 3.7% 13.5%;
+      --secondary-foreground: 0 0% 98%;
+      --muted: 240 3.7% 13.5%;
+      --muted-foreground: 240 5% 64.9%;
+      --accent: 240 3.7% 15.9%;
+      --accent-foreground: 0 0% 98%;
+      --destructive: 0 62.8% 45.6%;
+      --destructive-foreground: 0 0% 98%;
+      --border: 240 3.7% 15.9%;
+      --input: 240 3.7% 15.9%;
+      --ring: 240 4.9% 83.9%;
+      --success: 142.1 70.6% 45.3%;
+      --warning: 47.9 95.8% 53.1%;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      border-color: hsl(var(--border));
+    }
+
+    body {
+      margin: 0;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: hsl(var(--background));
+      color: hsl(var(--foreground));
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+    }
+
+    code, pre, .font-mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    /* Layout */
+    .container {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 1.5rem 1.25rem 3rem;
+    }
+
+    .header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding-bottom: 1.25rem;
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid hsl(var(--border));
+    }
+
+    .header-title {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .logo-box {
+      width: 2.5rem;
+      height: 2.5rem;
+      border-radius: var(--radius);
+      background: hsl(var(--primary));
+      color: hsl(var(--primary-foreground));
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+    }
+
+    .header h1 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      margin: 0;
+    }
+
+    .header p {
+      font-size: 0.85rem;
+      color: hsl(var(--muted-foreground));
+      margin: 0.1rem 0 0;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .grid-main {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 1.25rem;
+      align-items: start;
+    }
+
+    @media (max-width: 960px) {
+      .grid-main {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* shadcn Card */
+    .card {
+      background-color: hsl(var(--card));
+      color: hsl(var(--card-foreground));
+      border: 1px solid hsl(var(--border));
+      border-radius: calc(var(--radius) + 2px);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+
+    .card-header {
+      padding: 1.15rem 1.25rem 0.75rem;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 0.75rem;
+    }
+
+    .card-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .card-desc {
+      font-size: 0.8rem;
+      color: hsl(var(--muted-foreground));
+      margin: 0.25rem 0 0;
+    }
+
+    .card-content {
+      padding: 0 1.25rem 1.25rem;
+    }
+
+    .stack {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .stack-sm {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .row-between {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+
+    .separator {
+      height: 1px;
+      background-color: hsl(var(--border));
+      margin: 0.25rem 0;
+    }
+
+    /* Form Controls */
+    .label {
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: hsl(var(--foreground));
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+
+    .hint {
+      font-size: 0.75rem;
+      color: hsl(var(--muted-foreground));
+    }
+
+    .input, .select, .textarea {
+      width: 100%;
+      border-radius: var(--radius);
+      border: 1px solid hsl(var(--input));
+      background-color: hsl(var(--background));
+      color: hsl(var(--foreground));
+      font-family: inherit;
+      font-size: 0.85rem;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .input, .select {
+      height: 2.35rem;
+      padding: 0 0.75rem;
+    }
+
+    .textarea {
+      padding: 0.75rem;
+      resize: vertical;
+      min-height: 130px;
+      line-height: 1.55;
+    }
+
+    .input:focus, .select:focus, .textarea:focus {
+      outline: none;
+      border-color: hsl(var(--ring));
+      box-shadow: 0 0 0 2px hsl(var(--ring) / 0.18);
+    }
+
+    .select:disabled, .input:disabled, .textarea:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    /* shadcn Button */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.45rem;
+      height: 2.35rem;
+      padding: 0 0.95rem;
+      border-radius: var(--radius);
+      font-family: inherit;
+      font-size: 0.84rem;
+      font-weight: 500;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: background-color 0.15s, color 0.15s, opacity 0.15s, border-color 0.15s;
+      white-space: nowrap;
+      user-select: none;
+    }
+
+    .btn:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px hsl(var(--ring));
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    .btn-primary {
+      background-color: hsl(var(--primary));
+      color: hsl(var(--primary-foreground));
+    }
+    .btn-primary:hover { opacity: 0.9; }
+
+    .btn-secondary {
+      background-color: hsl(var(--secondary));
+      color: hsl(var(--secondary-foreground));
+    }
+    .btn-secondary:hover { background-color: hsl(var(--accent)); }
+
+    .btn-outline {
+      background-color: transparent;
+      border-color: hsl(var(--input));
+      color: hsl(var(--foreground));
+    }
+    .btn-outline:hover { background-color: hsl(var(--accent)); }
+
+    .btn-destructive {
+      background-color: hsl(var(--destructive));
+      color: hsl(var(--destructive-foreground));
+    }
+    .btn-destructive:hover { opacity: 0.9; }
+
+    .btn-ghost {
+      background-color: transparent;
+      color: hsl(var(--muted-foreground));
+    }
+    .btn-ghost:hover {
+      background-color: hsl(var(--accent));
+      color: hsl(var(--foreground));
+    }
+
+    .btn-sm {
+      height: 1.9rem;
+      padding: 0 0.65rem;
+      font-size: 0.78rem;
+    }
+
+    .btn-icon {
+      width: 2.25rem;
+      padding: 0;
+    }
+
+    /* shadcn Badge */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.18rem 0.55rem;
+      border-radius: 9999px;
+      font-size: 0.72rem;
+      font-weight: 500;
+      border: 1px solid hsl(var(--border));
+      background-color: hsl(var(--secondary));
+      color: hsl(var(--secondary-foreground));
+    }
+
+    .badge-success {
+      border-color: hsl(var(--success) / 0.35);
+      background-color: hsl(var(--success) / 0.12);
+      color: hsl(var(--success));
+    }
+
+    .badge-warning {
+      border-color: hsl(var(--warning) / 0.35);
+      background-color: hsl(var(--warning) / 0.12);
+      color: hsl(var(--warning));
+    }
+
+    .badge-destructive {
+      border-color: hsl(var(--destructive) / 0.35);
+      background-color: hsl(var(--destructive) / 0.12);
+      color: hsl(var(--destructive));
+    }
+
+    .dot {
+      width: 0.45rem;
+      height: 0.45rem;
+      border-radius: 9999px;
+      background-color: currentColor;
+    }
+
+    .dot.pulse {
+      animation: pulse 1.4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    /* Radix-style Tabs */
+    .tabs-list {
+      display: inline-flex;
+      padding: 0.22rem;
+      border-radius: var(--radius);
+      background-color: hsl(var(--muted));
+      border: 1px solid hsl(var(--border));
+      gap: 0.2rem;
+    }
+
+    .tab-trigger {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.35rem 0.75rem;
+      border-radius: calc(var(--radius) - 2px);
+      font-size: 0.8rem;
+      font-weight: 500;
+      border: none;
+      background: transparent;
+      color: hsl(var(--muted-foreground));
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .tab-trigger[aria-selected="true"] {
+      background-color: hsl(var(--background));
+      color: hsl(var(--foreground));
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+    }
+
+    /* Radix-style Slider */
+    input[type="range"].slider {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 6px;
+      border-radius: 9999px;
+      background: hsl(var(--secondary));
+      outline: none;
+      cursor: pointer;
+    }
+
+    input[type="range"].slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 9999px;
+      background: hsl(var(--primary));
+      border: 2px solid hsl(var(--background));
+      box-shadow: 0 0 0 1px hsl(var(--border));
+      cursor: pointer;
+    }
+
+    /* Radix-style Switch */
+    .switch {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      width: 38px;
+      height: 22px;
+      border-radius: 9999px;
+      background-color: hsl(var(--input));
+      border: 1px solid hsl(var(--border));
+      cursor: pointer;
+      transition: background-color 0.15s;
+      padding: 0;
+      flex-shrink: 0;
+    }
+
+    .switch[aria-checked="true"] {
+      background-color: hsl(var(--primary));
+    }
+
+    .switch-thumb {
+      width: 16px;
+      height: 16px;
+      border-radius: 9999px;
+      background-color: hsl(var(--background));
+      transform: translateX(2px);
+      transition: transform 0.15s;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    }
+
+    .switch[aria-checked="true"] .switch-thumb {
+      transform: translateX(18px);
+    }
+
+    /* Progress bar */
+    .progress-track {
+      width: 100%;
+      height: 8px;
+      border-radius: 9999px;
+      background-color: hsl(var(--secondary));
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background-color: hsl(var(--primary));
+      transition: width 0.15s ease;
+    }
+
+    /* Dropzone */
+    .dropzone {
+      border: 1px dashed hsl(var(--border));
+      border-radius: var(--radius);
+      padding: 0.75rem;
+      text-align: center;
+      cursor: pointer;
+      transition: background-color 0.15s, border-color 0.15s;
+      background-color: hsl(var(--muted) / 0.35);
+    }
+    .dropzone:hover, .dropzone.dragover {
+      background-color: hsl(var(--accent));
+      border-color: hsl(var(--ring));
+    }
+
+    /* Callout / Alert */
+    .alert {
+      display: flex;
+      gap: 0.6rem;
+      padding: 0.7rem 0.85rem;
+      border-radius: var(--radius);
+      border: 1px solid hsl(var(--border));
+      background-color: hsl(var(--muted) / 0.5);
+      font-size: 0.78rem;
+      color: hsl(var(--muted-foreground));
+      align-items: flex-start;
+    }
+
+    .alert-warning {
+      border-color: hsl(var(--warning) / 0.4);
+      background-color: hsl(var(--warning) / 0.08);
+      color: hsl(var(--foreground));
+    }
+
+    .alert-destructive {
+      border-color: hsl(var(--destructive) / 0.45);
+      background-color: hsl(var(--destructive) / 0.1);
+      color: hsl(var(--foreground));
+    }
+
+    /* Telemetry Grid */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.75rem;
+    }
+
+    @media (max-width: 640px) {
+      .metrics-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .metric-box {
+      border: 1px solid hsl(var(--border));
+      border-radius: var(--radius);
+      padding: 0.65rem 0.8rem;
+      background-color: hsl(var(--muted) / 0.28);
+    }
+
+    .metric-label {
+      font-size: 0.7rem;
+      color: hsl(var(--muted-foreground));
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .metric-val {
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin-top: 0.15rem;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Visualizer */
+    .viz-wrap {
+      position: relative;
+      border: 1px solid hsl(var(--border));
+      border-radius: var(--radius);
+      background-color: hsl(var(--muted) / 0.25);
+      height: 84px;
+      overflow: hidden;
+    }
+
+    canvas#waveformCanvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .viz-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      font-size: 0.78rem;
+      color: hsl(var(--muted-foreground));
+    }
+
+    /* Read-along box */
+    .read-along {
+      border: 1px solid hsl(var(--border));
+      border-radius: var(--radius);
+      padding: 0.85rem 1rem;
+      min-height: 76px;
+      max-height: 170px;
+      overflow-y: auto;
+      font-size: 0.92rem;
+      line-height: 1.7;
+      background-color: hsl(var(--muted) / 0.2);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .word-active {
+      background-color: hsl(var(--primary));
+      color: hsl(var(--primary-foreground));
+      border-radius: 4px;
+      padding: 0.05rem 0.22rem;
+      margin: 0 -0.05rem;
+      transition: background-color 0.08s ease;
+    }
+
+    .word-spoken {
+      color: hsl(var(--foreground));
+    }
+
+    .word-pending {
+      color: hsl(var(--muted-foreground));
+    }
+
+    /* Chunk Log */
+    .chunk-log {
+      border: 1px solid hsl(var(--border));
+      border-radius: var(--radius);
+      max-height: 165px;
+      overflow-y: auto;
+      font-size: 0.76rem;
+      background-color: hsl(var(--background));
+    }
+
+    .chunk-row {
+      display: grid;
+      grid-template-columns: 56px 90px 85px 1fr;
+      gap: 0.5rem;
+      padding: 0.42rem 0.75rem;
+      border-bottom: 1px solid hsl(var(--border));
+      align-items: center;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .chunk-row:last-child { border-bottom: none; }
+    .chunk-row.head {
+      background-color: hsl(var(--muted) / 0.5);
+      font-weight: 600;
+      color: hsl(var(--muted-foreground));
+      position: sticky;
+      top: 0;
+    }
+
+    .presets-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+    }
+
+    .hidden { display: none !important; }
+    .spin { animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-title">
+        <div class="logo-box" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2 10v3"/><path d="M6 6v11"/><path d="M10 3v18"/><path d="M14 8v7"/><path d="M18 5v13"/><path d="M22 10v3"/>
+          </svg>
+        </div>
+        <div>
+          <h1>MediaPipe Streaming TTS</h1>
+          <p>On-device neural text-to-speech via <code class="font-mono">@mediapipe/tasks-audio</code> (24 kHz PCM stream)</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <span id="webgpuBadge" class="badge">
+          <span class="dot"></span>
+          Checking WebGPU...
+        </span>
+        <span id="engineBadge" class="badge">
+          <span class="dot"></span>
+          Engine Unloaded
+        </span>
+        <button id="themeToggle" class="btn btn-outline btn-icon" title="Toggle theme" aria-label="Toggle dark mode">
+          <svg id="themeIconSun" class="hidden" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+          <svg id="themeIconMoon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="grid-main">
+      <!-- Left Column: Engine Configuration -->
+      <aside class="stack">
+        <section class="card">
+          <div class="card-header">
+            <div>
+              <h2 class="card-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="16" x="4" y="4" rx="2"/><rect width="6" height="6" x="9" y="9" rx="1"/><path d="M15 2v2"/><path d="M15 20v2"/><path d="M2 15h2"/><path d="M2 9h2"/><path d="M20 15h2"/><path d="M20 9h2"/><path d="M9 2v2"/><path d="M9 20v2"/></svg>
+                Model &amp; Runtime
+              </h2>
+              <p class="card-desc">Load a LiteRT-LM (<code class="font-mono">.litertlm</code>) TTS bundle locally.</p>
+            </div>
+          </div>
+          <div class="card-content stack">
+            <!-- Model Preset -->
+            <div class="stack-sm">
+              <label class="label" for="modelPreset">Model Bundle</label>
+              <select id="modelPreset" class="select">
+                <option value="kokoro-gpu">Kokoro-82M GPU FP16 (~295 MB, 54 voices)</option>
+                <option value="kokoro-cpu">Kokoro-82M CPU FP16 (~295 MB, 54 voices)</option>
+                <option value="phonon-cpu">Phonon 31M English CPU (~87 MB, fast TTFA)</option>
+                <option value="pocket-cpu">PocketTTS English CPU (~125 MB)</option>
+                <option value="custom">Custom URL / Local .litertlm File</option>
+              </select>
+            </div>
+
+            <!-- Custom URL / File -->
+            <div id="customModelBox" class="stack-sm hidden">
+              <label class="label" for="customModelUrl">Model URL (or drop file below)</label>
+              <input id="customModelUrl" class="input font-mono" type="text" placeholder="https://.../model.litertlm" />
+            </div>
+
+            <!-- Local file dropzone -->
+            <div id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="Load local litertlm file">
+              <input id="localFileInput" type="file" accept=".litertlm,.bin,.tflite" class="hidden" />
+              <div class="row" style="justify-content:center; gap:0.4rem;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+                <span id="localFileLabel" style="font-size:0.78rem; font-weight:500;">Load local .litertlm file (optional)</span>
+              </div>
+              <div class="hint" style="margin-top:0.2rem;">Drag &amp; drop or click to bypass network download</div>
+            </div>
+
+            <!-- Delegate & Speaking Rate -->
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.75rem;">
+              <div class="stack-sm">
+                <label class="label" for="delegateSelect">Delegate</label>
+                <select id="delegateSelect" class="select">
+                  <option value="GPU">GPU (WebGPU)</option>
+                  <option value="CPU">CPU (WASM)</option>
+                </select>
+              </div>
+              <div class="stack-sm">
+                <label class="label" for="rateSlider">
+                  Speed <span id="rateValue" class="font-mono hint">1.00x</span>
+                </label>
+                <div style="height:2.35rem; display:flex; align-items:center;">
+                  <input id="rateSlider" class="slider" type="range" min="0.5" max="2.0" step="0.05" value="1.0" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Cache Switch -->
+            <div class="row-between">
+              <div>
+                <div class="label">Cache weights in browser</div>
+                <div class="hint">Stores downloaded bundle in Cache API</div>
+              </div>
+              <button id="cacheSwitch" class="switch" role="switch" aria-checked="true" type="button" aria-label="Cache model weights">
+                <span class="switch-thumb"></span>
+              </button>
+            </div>
+
+            <div id="gpuWarning" class="alert alert-warning hidden">
+              <svg width="16" height="16" style="flex-shrink:0; margin-top:1px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+              <span>WebGPU was not detected in this browser. Switch to <strong>Phonon 31M (CPU)</strong> or <strong>Kokoro-82M (CPU)</strong> for clean WASM playback.</span>
+            </div>
+
+            <!-- Download / Init Progress -->
+            <div id="initProgressBox" class="stack-sm hidden">
+              <div class="row-between">
+                <span id="initProgressText" class="hint">Preparing...</span>
+                <span id="initProgressPct" class="hint font-mono">0%</span>
+              </div>
+              <div class="progress-track">
+                <div id="initProgressFill" class="progress-fill"></div>
+              </div>
+            </div>
+
+            <!-- Init / Clear Cache Buttons -->
+            <div class="row">
+              <button id="initBtn" class="btn btn-primary" style="flex:1;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                Initialize Engine
+              </button>
+              <button id="clearCacheBtn" class="btn btn-outline btn-icon" title="Clear cached models" aria-label="Clear cached models">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+              </button>
+            </div>
+
+            <div id="errorAlert" class="alert alert-destructive hidden">
+              <svg width="16" height="16" style="flex-shrink:0; margin-top:1px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+              <span id="errorText"></span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Voice Selection Card -->
+        <section class="card">
+          <div class="card-header">
+            <div>
+              <h2 class="card-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
+                Voice Selection
+              </h2>
+              <p class="card-desc">Switches per utterance in &lt;1 ms without reloading.</p>
+            </div>
+          </div>
+          <div class="card-content stack-sm">
+            <label class="label" for="voiceSelect">
+              Voice Profile
+              <span id="voiceCountBadge" class="hint font-mono">0 voices</span>
+            </label>
+            <select id="voiceSelect" class="select" disabled>
+              <option value="af_heart">af_heart (default)</option>
+            </select>
+            <div id="voiceMeta" class="hint">Initialize the engine to enumerate bundled voices.</div>
+          </div>
+        </section>
+      </aside>
+
+      <!-- Right Column: Streaming Synthesis Studio -->
+      <main class="stack">
+        <section class="card">
+          <div class="card-header" style="flex-wrap:wrap; align-items:center;">
+            <div>
+              <h2 class="card-title">Streaming Synthesis Studio</h2>
+              <p class="card-desc">Audio starts playing immediately as the first clause is vocoded.</p>
+            </div>
+            <!-- Mode Tabs -->
+            <div class="tabs-list" role="tablist" aria-label="Streaming Mode">
+              <button id="tabClause" class="tab-trigger" role="tab" aria-selected="true" type="button">
+                Clause Stream
+              </button>
+              <button id="tabToken" class="tab-trigger" role="tab" aria-selected="false" type="button">
+                Live Token Stream
+              </button>
+            </div>
+          </div>
+
+          <div class="card-content stack">
+            <!-- Sample Presets -->
+            <div class="presets-bar">
+              <span class="hint" style="align-self:center; margin-right:0.2rem;">Samples:</span>
+              <button class="btn btn-secondary btn-sm sample-btn" data-text="First sentence plays right away. Second sentence vocodes while the first plays, keeping latency low even on long passages.">Low-latency stream</button>
+              <button class="btn btn-secondary btn-sm sample-btn" data-text="On-device neural speech synthesis runs completely inside your browser using WebAssembly and WebGPU. No text or audio ever leaves your machine.">Privacy &amp; On-device</button>
+              <button class="btn btn-secondary btn-sm sample-btn" data-text="Dr. Chen checked the telemetry at 3.14 seconds: everything nominal! Shall we proceed to phase two, or run one more diagnostic check?">Punctuation &amp; Prosody</button>
+            </div>
+
+            <!-- Clause Mode Input -->
+            <div id="clausePanel" class="stack-sm">
+              <label class="label" for="ttsText">
+                Input Text
+                <span id="charCount" class="hint font-mono">0 chars</span>
+              </label>
+              <textarea id="ttsText" class="textarea" placeholder="Type or paste sentences to stream...">First sentence plays right away. Second sentence vocodes while the first plays, so you hear speech almost immediately without waiting for the entire paragraph to finish.</textarea>
+            </div>
+
+            <!-- Live Token Mode Input -->
+            <div id="tokenPanel" class="stack-sm hidden">
+              <div class="alert">
+                <svg width="16" height="16" style="flex-shrink:0; margin-top:1px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                <span>Simulates an LLM token stream using <code class="font-mono">openStream() / pushText() / finishInput()</code>. Audio begins speaking before token generation completes.</span>
+              </div>
+              <label class="label" for="tokenSourceText">
+                Simulated Token Source
+                <span class="hint font-mono" id="tokenSpeedLabel">45 ms / token</span>
+              </label>
+              <textarea id="tokenSourceText" class="textarea" style="min-height:95px;">Streaming tokens directly from a language model into MediaPipe Text-to-Speech. As soon as the first phrase is ready, you hear the voice immediately while new tokens continue arriving.</textarea>
+              <div class="row-between" style="gap:1rem;">
+                <span class="hint">Token interval</span>
+                <input id="tokenSpeedSlider" class="slider" style="max-width:240px;" type="range" min="15" max="140" step="5" value="45" />
+              </div>
+            </div>
+
+            <!-- Action Controls -->
+            <div class="row" style="flex-wrap:wrap;">
+              <button id="speakBtn" class="btn btn-primary" disabled>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+                <span id="speakBtnText">Stream Speech</span>
+              </button>
+              <button id="stopBtn" class="btn btn-destructive" disabled>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="5" y="5" rx="2"/></svg>
+                Stop / Cancel
+              </button>
+              <div style="flex:1;"></div>
+              <button id="replayBtn" class="btn btn-outline" disabled>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                Replay
+              </button>
+              <button id="downloadWavBtn" class="btn btn-outline" disabled>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                Export WAV
+              </button>
+            </div>
+
+            <!-- Waveform Visualizer -->
+            <div class="viz-wrap">
+              <canvas id="waveformCanvas"></canvas>
+              <div id="vizPlaceholder" class="viz-overlay">Real-time 24 kHz PCM waveform visualizer</div>
+            </div>
+
+            <!-- Telemetry Metrics -->
+            <div class="metrics-grid">
+              <div class="metric-box">
+                <div class="metric-label">First Audio (TTFA)</div>
+                <div id="metricTtfa" class="metric-val font-mono">—</div>
+              </div>
+              <div class="metric-box">
+                <div class="metric-label">Chunks Streamed</div>
+                <div id="metricChunks" class="metric-val font-mono">0</div>
+              </div>
+              <div class="metric-box">
+                <div class="metric-label">Audio Duration</div>
+                <div id="metricDuration" class="metric-val font-mono">0.00s</div>
+              </div>
+              <div class="metric-box">
+                <div class="metric-label">Real-Time Factor</div>
+                <div id="metricRtf" class="metric-val font-mono">—</div>
+              </div>
+            </div>
+
+            <!-- Read-Along Highlighting -->
+            <div class="stack-sm">
+              <div class="label">
+                <span>Live Read-Along Transcript</span>
+                <span id="streamStatusHint" class="hint">Idle</span>
+              </div>
+              <div id="readAlongBox" class="read-along">
+                <span class="hint">Words highlight here as audio plays when the model emits word timestamps.</span>
+              </div>
+            </div>
+
+            <!-- Stream Chunk Log -->
+            <div class="stack-sm">
+              <div class="label">
+                <span>Audio Chunk Stream Log</span>
+                <button id="clearLogBtn" class="btn btn-ghost btn-sm" type="button">Clear</button>
+              </div>
+              <div id="chunkLog" class="chunk-log">
+                <div class="chunk-row head">
+                  <span>Chunk</span>
+                  <span>Samples</span>
+                  <span>Duration</span>
+                  <span>Arrival / Status</span>
+                </div>
+                <div id="chunkLogBody">
+                  <div class="chunk-row" style="grid-template-columns: 1fr; color: hsl(var(--muted-foreground));">
+                    <span>No chunks streamed yet.</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script type="module">
+    import {
+      FilesetResolver,
+      TextToSpeech,
+    } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-audio@latest/audio_bundle.mjs";
+
+    // =========================================================================
+    // Model Presets & Configuration
+    // =========================================================================
+    const WASM_ROOT = "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-audio@latest/wasm";
+    const CACHE_NAME = "mediapipe-tts-litertlm-v1";
+
+    const MODEL_PRESETS = {
+      "kokoro-gpu": {
+        url: "https://huggingface.co/litert-community/Kokoro-82M/resolve/main/kokoro_int8_gpu_fp16.litertlm",
+        delegate: "GPU",
+        defaultVoiceId: "af_heart",
+        label: "Kokoro-82M GPU FP16",
+      },
+      "kokoro-cpu": {
+        url: "https://huggingface.co/litert-community/Kokoro-82M/resolve/main/kokoro_int8_fp16.litertlm",
+        delegate: "CPU",
+        defaultVoiceId: "af_heart",
+        label: "Kokoro-82M CPU FP16",
+      },
+      "phonon-cpu": {
+        url: "https://huggingface.co/litert-community/phonon-31m-en/resolve/main/phonon_int8.litertlm",
+        delegate: "CPU",
+        defaultVoiceId: "freya",
+        label: "Phonon 31M English",
+      },
+      "pocket-cpu": {
+        url: "https://huggingface.co/litert-community/pocket-tts/resolve/main/pocket_tts_en_int8.litertlm",
+        delegate: "CPU",
+        defaultVoiceId: "alba",
+        label: "PocketTTS English",
+      },
+      "custom": {
+        url: "",
+        delegate: "CPU",
+        defaultVoiceId: "af_heart",
+        label: "Custom Model",
+      },
+    };
+
+    // =========================================================================
+    // DOM References
+    // =========================================================================
+    const el = (id) => document.getElementById(id);
+    const themeToggle = el("themeToggle");
+    const themeIconSun = el("themeIconSun");
+    const themeIconMoon = el("themeIconMoon");
+    const webgpuBadge = el("webgpuBadge");
+    const engineBadge = el("engineBadge");
+    const gpuWarning = el("gpuWarning");
+
+    const modelPreset = el("modelPreset");
+    const customModelBox = el("customModelBox");
+    const customModelUrl = el("customModelUrl");
+    const dropzone = el("dropzone");
+    const localFileInput = el("localFileInput");
+    const localFileLabel = el("localFileLabel");
+    const delegateSelect = el("delegateSelect");
+    const rateSlider = el("rateSlider");
+    const rateValue = el("rateValue");
+    const cacheSwitch = el("cacheSwitch");
+    const initBtn = el("initBtn");
+    const clearCacheBtn = el("clearCacheBtn");
+    const initProgressBox = el("initProgressBox");
+    const initProgressText = el("initProgressText");
+    const initProgressPct = el("initProgressPct");
+    const initProgressFill = el("initProgressFill");
+    const errorAlert = el("errorAlert");
+    const errorText = el("errorText");
+
+    const voiceSelect = el("voiceSelect");
+    const voiceCountBadge = el("voiceCountBadge");
+    const voiceMeta = el("voiceMeta");
+
+    const tabClause = el("tabClause");
+    const tabToken = el("tabToken");
+    const clausePanel = el("clausePanel");
+    const tokenPanel = el("tokenPanel");
+    const ttsText = el("ttsText");
+    const charCount = el("charCount");
+    const tokenSourceText = el("tokenSourceText");
+    const tokenSpeedSlider = el("tokenSpeedSlider");
+    const tokenSpeedLabel = el("tokenSpeedLabel");
+
+    const speakBtn = el("speakBtn");
+    const speakBtnText = el("speakBtnText");
+    const stopBtn = el("stopBtn");
+    const replayBtn = el("replayBtn");
+    const downloadWavBtn = el("downloadWavBtn");
+    const clearLogBtn = el("clearLogBtn");
+
+    const waveformCanvas = el("waveformCanvas");
+    const vizPlaceholder = el("vizPlaceholder");
+    const metricTtfa = el("metricTtfa");
+    const metricChunks = el("metricChunks");
+    const metricDuration = el("metricDuration");
+    const metricRtf = el("metricRtf");
+    const readAlongBox = el("readAlongBox");
+    const streamStatusHint = el("streamStatusHint");
+    const chunkLogBody = el("chunkLogBody");
+
+    // =========================================================================
+    // Application State
+    // =========================================================================
+    let audioFileset = null;
+    let tts = null;
+    let activeBlobUrl = null;
+    let localModelFile = null;
+    let useCache = true;
+    let activeTab = "clause"; // "clause" | "token"
+    let hasWebGPU = false;
+
+    let audioCtx = null;
+    let analyserNode = null;
+    let nextPlayTime = 0;
+    let playbackOriginTime = null;
+    const activeSources = new Set();
+
+    let isStreaming = false;
+    let abortRequested = false;
+    let currentStream = null;
+    let recordedChunks = [];
+    let recordedSampleRate = 24000;
+    let timelineWords = []; // { startSecAbs, endSecAbs, startChar, endChar }
+    let currentUtteranceText = "";
+    let vizRafId = null;
+
+    // =========================================================================
+    // Theme & WebGPU Detection
+    // =========================================================================
+    function syncThemeIcons() {
+      const isDark = document.documentElement.classList.contains("dark");
+      themeIconSun.classList.toggle("hidden", !isDark);
+      themeIconMoon.classList.toggle("hidden", isDark);
+    }
+    themeToggle.addEventListener("click", () => {
+      document.documentElement.classList.toggle("dark");
+      syncThemeIcons();
+    });
+    syncThemeIcons();
+
+    async function checkWebGPU() {
+      try {
+        if (navigator.gpu) {
+          const adapter = await navigator.gpu.requestAdapter();
+          hasWebGPU = Boolean(adapter);
+        }
+      } catch {
+        hasWebGPU = false;
+      }
+
+      if (hasWebGPU) {
+        webgpuBadge.className = "badge badge-success";
+        webgpuBadge.innerHTML = `<span class="dot"></span> WebGPU Ready`;
+      } else {
+        webgpuBadge.className = "badge badge-warning";
+        webgpuBadge.innerHTML = `<span class="dot"></span> CPU / WASM Only`;
+        // Default to fast CPU model when WebGPU isn't available
+        modelPreset.value = "phonon-cpu";
+        applyPresetDefaults("phonon-cpu");
+      }
+      updateGpuWarning();
+    }
+
+    function updateGpuWarning() {
+      const needsGpuWarn = !hasWebGPU && delegateSelect.value === "GPU";
+      gpuWarning.classList.toggle("hidden", !needsGpuWarn);
+    }
+
+    // =========================================================================
+    // UI Bindings
+    // =========================================================================
+    function setEngineBadge(state, text) {
+      const cls =
+        state === "ready" ? "badge badge-success" :
+        state === "loading" ? "badge badge-warning" :
+        state === "error" ? "badge badge-destructive" : "badge";
+      const dotCls = state === "loading" ? "dot pulse" : "dot";
+      engineBadge.className = cls;
+      engineBadge.innerHTML = `<span class="${dotCls}"></span> ${escapeHtml(text)}`;
+    }
+
+    function showError(msg) {
+      if (!msg) {
+        errorAlert.classList.add("hidden");
+        errorText.textContent = "";
+        return;
+      }
+      errorText.textContent = msg;
+      errorAlert.classList.remove("hidden");
+    }
+
+    function applyPresetDefaults(key) {
+      const preset = MODEL_PRESETS[key] || MODEL_PRESETS.custom;
+      customModelBox.classList.toggle("hidden", key !== "custom");
+      if (key !== "custom") {
+        delegateSelect.value = preset.delegate;
+      }
+      updateGpuWarning();
+    }
+
+    modelPreset.addEventListener("change", () => {
+      localModelFile = null;
+      localFileLabel.textContent = "Load local .litertlm file (optional)";
+      applyPresetDefaults(modelPreset.value);
+    });
+
+    delegateSelect.addEventListener("change", updateGpuWarning);
+
+    rateSlider.addEventListener("input", () => {
+      rateValue.textContent = `${Number(rateSlider.value).toFixed(2)}x`;
+    });
+
+    cacheSwitch.addEventListener("click", () => {
+      useCache = !useCache;
+      cacheSwitch.setAttribute("aria-checked", String(useCache));
+    });
+
+    // Local file dropzone
+    dropzone.addEventListener("click", () => localFileInput.click());
+    dropzone.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        localFileInput.click();
+      }
+    });
+    dropzone.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      dropzone.classList.add("dragover");
+    });
+    dropzone.addEventListener("dragleave", () => dropzone.classList.remove("dragover"));
+    dropzone.addEventListener("drop", (e) => {
+      e.preventDefault();
+      dropzone.classList.remove("dragover");
+      const file = e.dataTransfer?.files?.[0];
+      if (file) selectLocalFile(file);
+    });
+    localFileInput.addEventListener("change", () => {
+      const file = localFileInput.files?.[0];
+      if (file) selectLocalFile(file);
+    });
+
+    function selectLocalFile(file) {
+      localModelFile = file;
+      localFileLabel.textContent = `${file.name} (${formatBytes(file.size)})`;
+      modelPreset.value = "custom";
+      customModelBox.classList.remove("hidden");
+      customModelUrl.value = "";
+      if (file.name.includes("gpu")) {
+        delegateSelect.value = "GPU";
+      } else if (file.name.includes("phonon") || file.name.includes("pocket") || file.name.includes("cpu")) {
+        delegateSelect.value = "CPU";
+      }
+      updateGpuWarning();
+    }
+
+    // Tabs
+    function setTab(mode) {
+      activeTab = mode;
+      tabClause.setAttribute("aria-selected", String(mode === "clause"));
+      tabToken.setAttribute("aria-selected", String(mode === "token"));
+      clausePanel.classList.toggle("hidden", mode !== "clause");
+      tokenPanel.classList.toggle("hidden", mode !== "token");
+      speakBtnText.textContent = mode === "clause" ? "Stream Speech" : "Start Token Stream";
+    }
+    tabClause.addEventListener("click", () => setTab("clause"));
+    tabToken.addEventListener("click", () => setTab("token"));
+
+    // Char count & samples
+    function updateCharCount() {
+      charCount.textContent = `${ttsText.value.length} chars`;
+    }
+    ttsText.addEventListener("input", updateCharCount);
+    updateCharCount();
+
+    tokenSpeedSlider.addEventListener("input", () => {
+      tokenSpeedLabel.textContent = `${tokenSpeedSlider.value} ms / token`;
+    });
+
+    document.querySelectorAll(".sample-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const text = btn.getAttribute("data-text") || "";
+        if (activeTab === "clause") {
+          ttsText.value = text;
+          updateCharCount();
+        } else {
+          tokenSourceText.value = text;
+        }
+      });
+    });
+
+    clearLogBtn.addEventListener("click", () => {
+      chunkLogBody.innerHTML = `<div class="chunk-row" style="grid-template-columns:1fr; color:hsl(var(--muted-foreground));"><span>Log cleared.</span></div>`;
+    });
+
+    // =========================================================================
+    // Model Download & Cache Storage Helper
+    // =========================================================================
+    function setProgress(pct, label) {
+      initProgressBox.classList.remove("hidden");
+      const clamped = Math.max(0, Math.min(100, pct));
+      initProgressFill.style.width = `${clamped}%`;
+      initProgressPct.textContent = `${Math.round(clamped)}%`;
+      initProgressText.textContent = label;
+    }
+
+    async function resolveModelBlobUrl(url) {
+      if (localModelFile) {
+        setProgress(100, `Reading local file (${formatBytes(localModelFile.size)})...`);
+        return URL.createObjectURL(localModelFile);
+      }
+
+      if (useCache && "caches" in window) {
+        try {
+          const cache = await caches.open(CACHE_NAME);
+          const cached = await cache.match(url);
+          if (cached) {
+            setProgress(100, "Loaded model from browser cache");
+            const blob = await cached.blob();
+            return URL.createObjectURL(blob);
+          }
+        } catch (err) {
+          console.warn("Cache read skipped:", err);
+        }
+      }
+
+      setProgress(0, "Downloading model weights...");
+      const response = await fetch(url, { mode: "cors" });
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status} fetching model (${response.statusText})`);
+      }
+
+      const contentLength = Number(response.headers.get("content-length")) || 0;
+      if (!response.body) {
+        const blob = await response.blob();
+        if (useCache && "caches" in window) {
+          const cache = await caches.open(CACHE_NAME);
+          await cache.put(url, new Response(blob));
+        }
+        return URL.createObjectURL(blob);
+      }
+
+      const reader = response.body.getReader();
+      const chunks = [];
+      let received = 0;
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        chunks.push(value);
+        received += value.byteLength;
+        if (contentLength > 0) {
+          const pct = (received / contentLength) * 100;
+          setProgress(pct, `Downloading ${formatBytes(received)} / ${formatBytes(contentLength)}`);
+        } else {
+          setProgress(50, `Downloading ${formatBytes(received)}...`);
+        }
+      }
+
+      const blob = new Blob(chunks, { type: "application/octet-stream" });
+      if (useCache && "caches" in window) {
+        try {
+          setProgress(100, "Saving model to browser cache...");
+          const cache = await caches.open(CACHE_NAME);
+          await cache.put(url, new Response(blob));
+        } catch (err) {
+          console.warn("Could not cache model (quota?):", err);
+        }
+      }
+
+      return URL.createObjectURL(blob);
+    }
+
+    clearCacheBtn.addEventListener("click", async () => {
+      if ("caches" in window) {
+        await caches.delete(CACHE_NAME);
+      }
+      initProgressBox.classList.add("hidden");
+      setEngineBadge("idle", tts ? "Engine Ready (Cache Cleared)" : "Cache Cleared");
+    });
+
+    // =========================================================================
+    // Initialize MediaPipe TextToSpeech Engine
+    // =========================================================================
+    initBtn.addEventListener("click", async () => {
+      showError(null);
+      const presetKey = modelPreset.value;
+      const preset = MODEL_PRESETS[presetKey] || MODEL_PRESETS.custom;
+      const targetUrl = presetKey === "custom" ? customModelUrl.value.trim() : preset.url;
+
+      if (!localModelFile && !targetUrl) {
+        showError("Please enter a model URL or select a local .litertlm file.");
+        return;
+      }
+
+      initBtn.disabled = true;
+      speakBtn.disabled = true;
+      setEngineBadge("loading", "Initializing...");
+
+      try {
+        if (tts) {
+          try { tts.close(); } catch {}
+          tts = null;
+        }
+        if (activeBlobUrl) {
+          URL.revokeObjectURL(activeBlobUrl);
+          activeBlobUrl = null;
+        }
+
+        if (!audioFileset) {
+          setProgress(10, "Loading MediaPipe Audio WASM runtime...");
+          audioFileset = await FilesetResolver.forAudioTasks(WASM_ROOT);
+        }
+
+        let modelAssetPath;
+        try {
+          activeBlobUrl = await resolveModelBlobUrl(targetUrl);
+          modelAssetPath = activeBlobUrl;
+        } catch (fetchErr) {
+          // Fallback to direct URL if manual streaming fetch failed
+          console.warn("Streaming download fallback to direct URL:", fetchErr);
+          modelAssetPath = targetUrl;
+        }
+
+        setProgress(100, `Booting ${delegateSelect.value} inference graph...`);
+
+        const options = {
+          baseOptions: {
+            modelAssetPath,
+            delegate: delegateSelect.value,
+          },
+          defaultVoiceId: preset.defaultVoiceId,
+          speakingRate: Number(rateSlider.value),
+        };
+
+        tts = await TextToSpeech.createFromOptions(audioFileset, options);
+        await populateVoices(preset.defaultVoiceId);
+
+        setEngineBadge("ready", `Ready (${delegateSelect.value})`);
+        speakBtn.disabled = false;
+        initProgressText.textContent = "Engine initialized and ready";
+      } catch (err) {
+        console.error(err);
+        setEngineBadge("error", "Init Failed");
+        showError(err?.message || String(err));
+      } finally {
+        initBtn.disabled = false;
+      }
+    });
+
+    async function populateVoices(fallbackVoiceId) {
+      let voices = [];
+      try {
+        voices = (await tts.listVoices()) || [];
+      } catch (err) {
+        console.warn("listVoices failed:", err);
+      }
+
+      voiceSelect.innerHTML = "";
+      if (!voices.length) {
+        const opt = document.createElement("option");
+        opt.value = fallbackVoiceId || "af_heart";
+        opt.textContent = `${opt.value} (default)`;
+        voiceSelect.appendChild(opt);
+        voiceSelect.disabled = false;
+        voiceCountBadge.textContent = "1 voice";
+        voiceMeta.textContent = "Voice list unavailable; using model default.";
+        return;
+      }
+
+      // Group voices by locale
+      const byLocale = new Map();
+      for (const v of voices) {
+        const loc = v.locale || "other";
+        if (!byLocale.has(loc)) byLocale.set(loc, []);
+        byLocale.get(loc).push(v);
+      }
+
+      for (const [locale, list] of byLocale.entries()) {
+        const group = document.createElement("optgroup");
+        group.label = locale;
+        for (const v of list) {
+          const opt = document.createElement("option");
+          opt.value = v.voiceId;
+          opt.textContent = v.displayName && v.displayName !== v.voiceId
+            ? `${v.displayName} (${v.voiceId})`
+            : v.voiceId;
+          opt.dataset.locale = v.locale || "";
+          opt.dataset.rate = String(v.sampleRateHz || 24000);
+          group.appendChild(opt);
+        }
+        voiceSelect.appendChild(group);
+      }
+
+      if ([...voiceSelect.options].some((o) => o.value === fallbackVoiceId)) {
+        voiceSelect.value = fallbackVoiceId;
+      }
+
+      voiceSelect.disabled = false;
+      voiceCountBadge.textContent = `${voices.length} voices`;
+      updateVoiceMeta();
+    }
+
+    function updateVoiceMeta() {
+      const opt = voiceSelect.selectedOptions?.[0];
+      if (!opt) return;
+      const loc = opt.dataset.locale || "auto";
+      const rate = opt.dataset.rate || "24000";
+      voiceMeta.textContent = `Voice ID: ${opt.value} • Locale: ${loc} • ${rate} Hz PCM`;
+    }
+    voiceSelect.addEventListener("change", updateVoiceMeta);
+
+    // =========================================================================
+    // Web Audio API Gapless Streaming Player (enqueuePcmPlayback)
+    // =========================================================================
+    function ensureAudioContext(sampleRateHz = 24000) {
+      if (!audioCtx) {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        try {
+          audioCtx = new AudioCtx({ sampleRate: sampleRateHz });
+        } catch {
+          audioCtx = new AudioCtx();
+        }
+        analyserNode = audioCtx.createAnalyser();
+        analyserNode.fftSize = 1024;
+        analyserNode.smoothingTimeConstant = 0.78;
+        analyserNode.connect(audioCtx.destination);
+      }
+      if (audioCtx.state === "suspended") {
+        audioCtx.resume();
+      }
+    }
+
+    function enqueuePcmPlayback(samples, sampleRateHz = 24000, onChunkScheduled) {
+      ensureAudioContext(sampleRateHz);
+      if (!samples || samples.length === 0) return { startAt: audioCtx.currentTime, duration: 0 };
+
+      const buffer = audioCtx.createBuffer(1, samples.length, sampleRateHz);
+      buffer.copyToChannel(samples, 0);
+
+      const source = audioCtx.createBufferSource();
+      source.buffer = buffer;
+      source.connect(analyserNode);
+
+      // Schedule seamlessly right after previous chunk (with 20 ms initial cushion)
+      const startAt = Math.max(audioCtx.currentTime + 0.02, nextPlayTime);
+      if (playbackOriginTime === null) {
+        playbackOriginTime = startAt;
+      }
+
+      activeSources.add(source);
+      source.onended = () => {
+        activeSources.delete(source);
+        if (activeSources.size === 0 && !isStreaming) {
+          streamStatusHint.textContent = "Playback complete";
+        }
+      };
+
+      source.start(startAt);
+      nextPlayTime = startAt + buffer.duration;
+
+      if (onChunkScheduled) onChunkScheduled(startAt, buffer.duration);
+      return { startAt, duration: buffer.duration };
+    }
+
+    function stopAudioPlayback() {
+      for (const src of activeSources) {
+        try {
+          src.stop();
+          src.disconnect();
+        } catch {}
+      }
+      activeSources.clear();
+      nextPlayTime = 0;
+      playbackOriginTime = null;
+    }
+
+    // =========================================================================
+    // Streaming Synthesis (Clause Stream & Live Token Stream)
+    // =========================================================================
+    speakBtn.addEventListener("click", async () => {
+      if (!tts || isStreaming) return;
+
+      const text = activeTab === "clause" ? ttsText.value.trim() : tokenSourceText.value.trim();
+      if (!text) {
+        showError("Enter some text to synthesize.");
+        return;
+      }
+
+      showError(null);
+      stopAudioPlayback();
+      ensureAudioContext(24000);
+
+      isStreaming = true;
+      abortRequested = false;
+      recordedChunks = [];
+      timelineWords = [];
+      currentUtteranceText = text;
+
+      speakBtn.disabled = true;
+      stopBtn.disabled = false;
+      replayBtn.disabled = true;
+      downloadWavBtn.disabled = true;
+
+      metricTtfa.textContent = "—";
+      metricChunks.textContent = "0";
+      metricDuration.textContent = "0.00s";
+      metricRtf.textContent = "—";
+      chunkLogBody.innerHTML = "";
+      vizPlaceholder.classList.add("hidden");
+      streamStatusHint.textContent = activeTab === "clause" ? "Vocoding first clause..." : "Streaming tokens & vocoding...";
+
+      renderReadAlongInitial(text);
+      startVisualizerLoop();
+
+      const t0 = performance.now();
+      let chunkCount = 0;
+      let totalAudioSec = 0;
+      let ttfaRecorded = false;
+
+      const synthOptions = { voiceId: voiceSelect.value };
+      const byteToCharMap = buildByteToCharMap(text);
+
+      try {
+        if (activeTab === "clause") {
+          currentStream = await tts.synthesizeStream(text, synthOptions);
+          await consumeAudioStream(currentStream);
+        } else {
+          // Incremental LLM token streaming via openStream() or synthesizeStream("", opts, false)
+          currentStream = typeof tts.openStream === "function"
+            ? await tts.openStream(synthOptions)
+            : await tts.synthesizeStream("", synthOptions, false);
+
+          // Push tokens concurrently while consuming audio chunks
+          const pushPromise = streamTokensIntoTts(currentStream, text, Number(tokenSpeedSlider.value));
+          const consumePromise = consumeAudioStream(currentStream);
+          await Promise.all([pushPromise, consumePromise]);
+        }
+      } catch (err) {
+        if (!abortRequested) {
+          console.error(err);
+          showError(err?.message || String(err));
+        }
+      } finally {
+        try { currentStream?.close?.(); } catch {}
+        currentStream = null;
+        isStreaming = false;
+        speakBtn.disabled = false;
+        stopBtn.disabled = true;
+
+        if (recordedChunks.length > 0) {
+          replayBtn.disabled = false;
+          downloadWavBtn.disabled = false;
+        }
+        if (abortRequested) {
+          streamStatusHint.textContent = "Cancelled";
+        } else if (activeSources.size === 0) {
+          streamStatusHint.textContent = "Complete";
+        } else {
+          streamStatusHint.textContent = "Playing remaining audio...";
+        }
+      }
+
+      async function consumeAudioStream(stream) {
+        for await (const chunk of stream) {
+          if (abortRequested) break;
+
+          const nowMs = performance.now() - t0;
+          const samples = chunk.samples;
+          const sampleRate = chunk.sampleRateHz || 24000;
+          recordedSampleRate = sampleRate;
+
+          if (samples && samples.length > 0) {
+            recordedChunks.push(new Float32Array(samples));
+          }
+
+          const { startAt, duration } = enqueuePcmPlayback(samples, sampleRate);
+          const prevCumulative = totalAudioSec;
+          totalAudioSec += duration;
+          chunkCount += 1;
+
+          if (!ttfaRecorded) {
+            ttfaRecorded = true;
+            metricTtfa.textContent = `${Math.round(nowMs)} ms`;
+            streamStatusHint.textContent = "Streaming audio...";
+          }
+
+          metricChunks.textContent = String(chunkCount);
+          metricDuration.textContent = `${totalAudioSec.toFixed(2)}s`;
+          if (totalAudioSec > 0) {
+            const rtf = (nowMs / 1000) / totalAudioSec;
+            metricRtf.textContent = `${rtf.toFixed(2)}x`;
+          }
+
+          // Collect word timestamps for live read-along highlighting
+          if (Array.isArray(chunk.wordTimestamps) && chunk.wordTimestamps.length > 0) {
+            for (const wt of chunk.wordTimestamps) {
+              // Detect whether startSec is chunk-relative or utterance-relative
+              const isUtteranceRelative =
+                chunkCount > 1 && playbackOriginTime !== null && wt.startSec >= prevCumulative - 0.1;
+              const baseTime = isUtteranceRelative ? playbackOriginTime : startAt;
+
+              const startChar = byteToCharMap[wt.startChar] ?? wt.startChar;
+              const endChar = byteToCharMap[wt.endChar] ?? wt.endChar;
+
+              timelineWords.push({
+                startSecAbs: baseTime + wt.startSec,
+                endSecAbs: baseTime + wt.endSec,
+                startChar,
+                endChar,
+              });
+            }
+          }
+
+          appendChunkLogRow(
+            chunk.chunkIndex ?? (chunkCount - 1),
+            samples?.length ?? 0,
+            duration,
+            nowMs,
+            Boolean(chunk.isFinal)
+          );
+        }
+      }
+    });
+
+    async function streamTokensIntoTts(stream, fullText, delayMs) {
+      // Split into word/whitespace tokens to mimic LLM token streaming
+      const tokens = fullText.match(/\S+\s*/g) || [fullText];
+      for (const token of tokens) {
+        if (abortRequested) return;
+        stream.pushText(token);
+        await sleep(delayMs);
+      }
+      if (!abortRequested) {
+        await stream.finishInput();
+      }
+    }
+
+    stopBtn.addEventListener("click", () => {
+      abortRequested = true;
+      try { currentStream?.cancel?.(); } catch {}
+      try { tts?.cancel?.(); } catch {}
+      stopAudioPlayback();
+      stopBtn.disabled = true;
+      speakBtn.disabled = false;
+      streamStatusHint.textContent = "Cancelled";
+    });
+
+    replayBtn.addEventListener("click", () => {
+      if (!recordedChunks.length || isStreaming) return;
+      stopAudioPlayback();
+      ensureAudioContext(recordedSampleRate);
+      vizPlaceholder.classList.add("hidden");
+      streamStatusHint.textContent = "Replaying cached buffer...";
+      startVisualizerLoop();
+
+      // Re-base word timestamps for replay
+      const merged = concatFloat32(recordedChunks);
+      const oldOrigin = playbackOriginTime;
+      const { startAt } = enqueuePcmPlayback(merged, recordedSampleRate);
+      if (oldOrigin !== null && timelineWords.length > 0) {
+        const shift = startAt - oldOrigin;
+        timelineWords = timelineWords.map((w) => ({
+          ...w,
+          startSecAbs: w.startSecAbs + shift,
+          endSecAbs: w.endSecAbs + shift,
+        }));
+      }
+    });
+
+    downloadWavBtn.addEventListener("click", () => {
+      if (!recordedChunks.length) return;
+      const pcm = concatFloat32(recordedChunks);
+      const wavBlob = encodeWav(pcm, recordedSampleRate);
+      const url = URL.createObjectURL(wavBlob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `mediapipe-tts-${voiceSelect.value || "speech"}.wav`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    });
+
+    // =========================================================================
+    // Read-Along Highlighting & Waveform Visualizer
+    // =========================================================================
+    function renderReadAlongInitial(text) {
+      readAlongBox.textContent = text;
+    }
+
+    function updateReadAlongHighlight() {
+      if (!audioCtx || !timelineWords.length || !currentUtteranceText) return;
+      const now = audioCtx.currentTime;
+
+      let activeIdx = -1;
+      for (let i = 0; i < timelineWords.length; i++) {
+        if (now >= timelineWords[i].startSecAbs && now <= timelineWords[i].endSecAbs + 0.08) {
+          activeIdx = i;
+          break;
+        }
+      }
+
+      if (activeIdx === -1) return;
+      const w = timelineWords[activeIdx];
+      const before = currentUtteranceText.slice(0, w.startChar);
+      const active = currentUtteranceText.slice(w.startChar, w.endChar);
+      const after = currentUtteranceText.slice(w.endChar);
+
+      readAlongBox.innerHTML =
+        `<span class="word-spoken">${escapeHtml(before)}</span>` +
+        `<span class="word-active">${escapeHtml(active)}</span>` +
+        `<span class="word-pending">${escapeHtml(after)}</span>`;
+    }
+
+    function startVisualizerLoop() {
+      if (vizRafId) cancelAnimationFrame(vizRafId);
+
+      const dpr = window.devicePixelRatio || 1;
+      const rect = waveformCanvas.getBoundingClientRect();
+      waveformCanvas.width = Math.max(1, Math.floor(rect.width * dpr));
+      waveformCanvas.height = Math.max(1, Math.floor(rect.height * dpr));
+
+      const ctx = waveformCanvas.getContext("2d");
+      const dataArray = new Uint8Array(analyserNode ? analyserNode.frequencyBinCount : 256);
+
+      const draw = () => {
+        if (analyserNode) {
+          analyserNode.getByteTimeDomainData(dataArray);
+        }
+
+        const w = waveformCanvas.width;
+        const h = waveformCanvas.height;
+        ctx.clearRect(0, 0, w, h);
+
+        const isDark = document.documentElement.classList.contains("dark");
+        ctx.lineWidth = 2 * dpr;
+        ctx.strokeStyle = isDark ? "#fafafa" : "#18181b";
+        ctx.beginPath();
+
+        const sliceWidth = w / dataArray.length;
+        let x = 0;
+        for (let i = 0; i < dataArray.length; i++) {
+          const v = dataArray[i] / 128.0;
+          const y = (v * h) / 2;
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+          x += sliceWidth;
+        }
+        ctx.lineTo(w, h / 2);
+        ctx.stroke();
+
+        updateReadAlongHighlight();
+
+        if (isStreaming || activeSources.size > 0) {
+          vizRafId = requestAnimationFrame(draw);
+        } else {
+          vizRafId = null;
+        }
+      };
+
+      vizRafId = requestAnimationFrame(draw);
+    }
+
+    function appendChunkLogRow(idx, sampleCount, durationSec, arrivalMs, isFinal) {
+      const row = document.createElement("div");
+      row.className = "chunk-row font-mono";
+      row.innerHTML = `
+        <span>#${idx}</span>
+        <span>${sampleCount.toLocaleString()}</span>
+        <span>${(durationSec * 1000).toFixed(0)} ms</span>
+        <span>@${Math.round(arrivalMs)} ms${isFinal ? " • final" : ""}</span>
+      `;
+      chunkLogBody.appendChild(row);
+      const container = el("chunkLog");
+      container.scrollTop = container.scrollHeight;
+    }
+
+    // =========================================================================
+    // Utilities (WAV Encoder, UTF-8 Offset Map, Formatting)
+    // =========================================================================
+    function buildByteToCharMap(text) {
+      const encoder = new TextEncoder();
+      const map = [0];
+      let charIdx = 0;
+      for (const cp of text) {
+        const byteLen = encoder.encode(cp).length;
+        for (let i = 0; i < byteLen; i++) {
+          map.push(charIdx + (i === byteLen - 1 ? cp.length : 0));
+        }
+        charIdx += cp.length;
+      }
+      return map;
+    }
+
+    function concatFloat32(arrays) {
+      const total = arrays.reduce((acc, a) => acc + a.length, 0);
+      const out = new Float32Array(total);
+      let offset = 0;
+      for (const arr of arrays) {
+        out.set(arr, offset);
+        offset += arr.length;
+      }
+      return out;
+    }
+
+    function encodeWav(float32Samples, sampleRate = 24000) {
+      const buffer = new ArrayBuffer(44 + float32Samples.length * 2);
+      const view = new DataView(buffer);
+
+      const writeStr = (offset, str) => {
+        for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i));
+      };
+
+      writeStr(0, "RIFF");
+      view.setUint32(4, 36 + float32Samples.length * 2, true);
+      writeStr(8, "WAVE");
+      writeStr(12, "fmt ");
+      view.setUint32(16, 16, true);
+      view.setUint16(20, 1, true); // PCM
+      view.setUint16(22, 1, true); // Mono
+      view.setUint32(24, sampleRate, true);
+      view.setUint32(28, sampleRate * 2, true);
+      view.setUint16(32, 2, true);
+      view.setUint16(34, 16, true);
+      writeStr(36, "data");
+      view.setUint32(40, float32Samples.length * 2, true);
+
+      let offset = 44;
+      for (let i = 0; i < float32Samples.length; i++) {
+        const s = Math.max(-1, Math.min(1, float32Samples[i]));
+        view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7fff, true);
+        offset += 2;
+      }
+      return new Blob([view], { type: "audio/wav" });
+    }
+
+    function formatBytes(bytes) {
+      if (!bytes) return "0 B";
+      const units = ["B", "KB", "MB", "GB"];
+      const i = Math.min(units.length - 1, Math.floor(Math.log(bytes) / Math.log(1024)));
+      return `${(bytes / 1024 ** i).toFixed(1)} ${units[i]}`;
+    }
+
+    function escapeHtml(str) {
+      return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function sleep(ms) {
+      return new Promise((resolve) => setTimeout(resolve, ms));
+    }
+
+    // Boot
+    checkWebGPU();
+  </script>
+</body>
+</html>
